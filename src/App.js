@@ -1,25 +1,52 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import FormularioProducto from "./components/FormularioProducto";
+import ListaProductos from "./components/ListaProductos";
+import { obtenerProductos, eliminarProducto, editarProducto } from "./firebaseCrud";
+import "./App.css";
 
-function App() {
+const App = () => {
+  const [productos, setProductos] = useState([]);
+
+  const cargarProductos = async () => {
+    const productosObtenidos = await obtenerProductos();
+    setProductos(productosObtenidos);
+  };
+
+  useEffect(() => {
+    cargarProductos();
+  }, []);
+
+  const manejarProductoCreado = (producto) => {
+    setProductos((prevProductos) => [...prevProductos, producto]);
+  };
+
+  const manejarEliminarProducto = async (id) => {
+    await eliminarProducto(id);
+    setProductos((prevProductos) =>
+      prevProductos.filter((producto) => producto.id !== id)
+    );
+  };
+
+  const manejarEditarProducto = async (id, nuevosDatos) => {
+    await editarProducto(id, nuevosDatos);
+    setProductos((prevProductos) =>
+      prevProductos.map((producto) =>
+        producto.id === id ? { ...producto, ...nuevosDatos } : producto
+      )
+    );
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container">
+      <h1>Gestión de Productos</h1>
+      <FormularioProducto onProductoCreado={manejarProductoCreado} />
+      <ListaProductos
+        productos={productos}
+        onEliminarProducto={manejarEliminarProducto}
+        onEditarProducto={manejarEditarProducto}
+      />
     </div>
   );
-}
+};
 
 export default App;
